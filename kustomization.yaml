@@ -1,0 +1,7 @@
+#secretGenerator:
+#- name: mysql-pass
+#  literals:
+#  - password=Password123
+resources:
+  - postgres-deployment.yaml
+  - jira-deployment.yaml

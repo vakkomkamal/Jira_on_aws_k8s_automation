@@ -1,0 +1,12 @@
+.git
+jira-deployment.yaml
+/mysql/*
+postgres-deployment.yaml
+solution_start.sh
+kubectl
+postgres
+postgres/*
+kubectl
+kustomization.yaml
+
+

@@ -1,0 +1,4 @@
+FROM library/postgres
+ENV POSTGRES_USER jira_usr
+ENV POSTGRES_PASSWORD Password123
+ENV POSTGRES_DB jira_db
