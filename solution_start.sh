@@ -84,7 +84,7 @@ eksctl create cluster \
 --ssh-public-key ~/.ssh/id_rsa.pub \
 --managed
 
-cat <<EOF> deployment.yaml
+cat <<EOF> jira-deployment.yaml
 apiVersion: v1
 kind: Service
 metadata:
