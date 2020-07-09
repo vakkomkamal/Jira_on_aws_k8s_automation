@@ -84,6 +84,153 @@ eksctl create cluster \
 --ssh-public-key ~/.ssh/id_rsa.pub \
 --managed
 
+cat <<EOF> deployment.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: jira
+  labels:
+    app: jira
+spec:
+  ports:
+    - port: 8080
+  selector:
+    app: jira
+    tier: frontend
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jira-pv-claim
+  labels:
+    app: jira
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: jira
+  labels:
+    app: jira
+spec:
+  selector:
+    matchLabels:
+      app: jira
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: jira
+        tier: frontend
+    spec:
+      containers:
+      - image: $registryID.dkr.ecr.us-west-2.amazonaws.com/atlassian:latest
+        name: jira
+        env:
+        - name: JVM_MINIMUM_MEMORY
+          value: 1024m
+        - name: JVM_MAXIMUM_MEMORY
+          value: 1024m
+        - name: ATL_JDBC_URL
+          value: jdbc:postgresql://jira-postgres:5432/jira_db
+        - name: ATL_JDBC_USER
+          value: jira_usr
+        - name: ATL_JDBC_PASSWORD
+          value: Password123
+        - name: ATL_DB_DRIVER
+          value: org.postgresql.Driver
+        - name: ATL_DB_TYPE
+          value: postgres72
+        - name: ATL_DB_SCHEMA_NAME
+          value: public
+        ports:
+        - containerPort: 8080
+          name: jira
+        volumeMounts:
+        - name: jira-persistent-storage
+          mountPath: /var/atlassian/application-data/jira
+      volumes:
+      - name: jira-persistent-storage
+        persistentVolumeClaim:
+          claimName: jira-pv-claim
+EOF
+
+cat <<EOF> postgres-deployment.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: jira-postgres
+  labels:
+    app: jira
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: jira
+    tier: postgres
+  clusterIP: None
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pv-claim
+  labels:
+    app: jira
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: jira-postgres
+  labels:
+    app: jira
+spec:
+  selector:
+    matchLabels:
+      app: jira
+      tier: postgres
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: jira
+        tier: postgres
+    spec:
+      containers:
+      - image: $registryID.dkr.ecr.us-west-2.amazonaws.com/postgres:latest
+        name: postgres
+        env:
+        - name: POSTGRES_USER
+          value: jira_usr
+        - name: POSTGRES_DB
+          value: jira_db
+        - name: POSTGRES_PASSWORD
+          value: Password123
+        ports:
+        - containerPort: 5432
+          name: postgres
+        volumeMounts:
+        - name: postgres-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: postgres-persistent-storage
+        persistentVolumeClaim:
+          claimName: postgres-pv-claim
+EOF
 
 kubectl apply -k ./
 kubectl get svc -o wide

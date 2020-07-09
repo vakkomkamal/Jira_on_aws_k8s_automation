@@ -45,7 +45,7 @@ spec:
         tier: postgres
     spec:
       containers:
-      - image: 828546120056.dkr.ecr.us-west-2.amazonaws.com/postgres:latest
+      - image: $registryID.dkr.ecr.us-west-2.amazonaws.com/postgres:latest
         name: postgres
         env:
         - name: POSTGRES_USER
