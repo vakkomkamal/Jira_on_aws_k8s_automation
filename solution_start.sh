@@ -132,7 +132,7 @@ spec:
         tier: frontend
     spec:
       containers:
-      - image: $registryID.dkr.ecr.us-west-2.amazonaws.com/atlassian:latest
+      - image: $registryID.dkr.ecr.us-west-2.amazonaws.com/$clustername:latest
         name: jira
         env:
         - name: JVM_MINIMUM_MEMORY
